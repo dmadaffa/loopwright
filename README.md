@@ -74,6 +74,8 @@ Known limits:
 - `run_on_base.py` copies whole changed files; a file that mixes test and fix code can't be split.
 - Dogfooded on one project (a Python project run with uv), so other stacks are untested.
 
+## Developing loopwright
+
 To work on the plugin itself, run from the repo root:
 
 ```
@@ -82,6 +84,14 @@ uv run ruff check .
 claude plugin validate --strict .
 ```
 
+Work on this repo with the GitHub-installed copy of the plugin orchestrating, so the reviewer's scripts and instructions are not the code under review.
+
+To try a change, start a second session with `claude --plugin-dir <path to the clone>`. That copy silently replaces the installed one, and `claude plugin list` still shows the installed copy as enabled. To see which copy loaded, ask the session which Base directory the last loopwright skill loaded from: the repo path means the clone, the plugin cache path means the installed copy.
+
+To release, bump `version` in `.claude-plugin/plugin.json` and the Version line in this README, then push. The bump is needed because installs keep the cached copy until the version string changes. Third-party marketplaces don't auto-update by default, so then run `claude plugin update loopwright@loopwright` in each project that uses it, and restart the session (or run `/reload-plugins`) to load the new version.
+
 CI runs the tests and `ruff check` on Ubuntu, Windows and macOS with Python 3.10 and the latest stable, and the validate step on Ubuntu.
+
+## License
 
 MIT licensed. See [LICENSE](LICENSE).
