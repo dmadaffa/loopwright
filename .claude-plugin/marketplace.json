@@ -1,0 +1,15 @@
+{
+  "name": "loopwright",
+  "owner": {
+    "name": "Daniele Madaffari",
+    "url": "https://github.com/dmadaffa"
+  },
+  "description": "Marketplace for the loopwright plugin: test-first developer and blind code-reviewer subagents plus task-queue skills.",
+  "plugins": [
+    {
+      "name": "loopwright",
+      "source": "./",
+      "description": "A developer and a code-reviewer subagent for test-first, reviewed, uncommitted changes, plus init, task-work and task-new skills to set up and run the task queue."
+    }
+  ]
+}
