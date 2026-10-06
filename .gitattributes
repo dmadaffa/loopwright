@@ -1,0 +1,3 @@
+# Keep LF in the working tree even with core.autocrlf=true: agents write
+# files with LF, and mixed endings make git warn on every touch.
+* text=auto eol=lf
