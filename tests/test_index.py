@@ -322,6 +322,18 @@ def test_unclosed_front_matter_fails(tmp_path):
     assert path.name in result.stderr
 
 
+def test_block_list_for_depends_fails(tmp_path):
+    # Decision: depends must be a flow list like [1, 2]; a YAML block list is rejected.
+    make_task(tmp_path, "features", 1)
+    path = make_task(tmp_path, "features", 2, depends="\n  - 1")
+
+    result = run_index(tmp_path)
+
+    assert result.returncode == 1
+    assert path.name in result.stderr
+    assert not (tmp_path / "INDEX.md").exists()
+
+
 def test_missing_title_heading_fails(tmp_path):
     path = make_task(tmp_path, "features", 1, title=False)
 
