@@ -1,23 +1,47 @@
 # loopwright
 
-A blind reviewer that proves each new test fails on the old code before the change is committed.
+[![CI](https://github.com/dmadaffa/loopwright/actions/workflows/ci.yml/badge.svg)](https://github.com/dmadaffa/loopwright/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+A blind reviewer that checks that each new test fails on the old code before the change is committed.
+
+An AI agent will happily report that its test failed before the fix. loopwright makes a separate reviewer check that claim on the old code instead of taking its word.
 
 loopwright is a Claude Code plugin for test-first work on a task queue.
 
 - A developer subagent writes a failing test, fixes the code, and labels every test it adds.
 - A code-reviewer subagent judges the change against the task alone, re-runs the new tests on the base revision, and runs the full suite.
-- You (the orchestrating session) pick the task, forward findings, commit, and close it.
+- Your main Claude Code session (the orchestrator) picks the task, forwards findings, commits, and closes it.
 
 ## Install
 
-```
+```sh
 claude plugin marketplace add dmadaffa/loopwright
 claude plugin install loopwright@loopwright
 ```
 
 Then, in your project, run `/loopwright:init`. It looks at how the project runs tests and checks, asks you to confirm in one question, and writes `.claude/loopwright.md`, a project rules file and the task folders. It never overwrites an existing `.claude/loopwright.md`.
 
-Needs Python 3.10+ and git. The scripts use only the standard library.
+Needs Claude Code, Python 3.10+ and git. The scripts use only the standard library.
+
+### Sharing the plugin with a project's contributors
+
+`claude plugin install --scope project` writes only `enabledPlugins` to the project's `.claude/settings.json`, not `extraKnownMarketplaces`. Someone who clones the project then sees the plugin as enabled but not installed, because their Claude Code doesn't know the marketplace. To fix that, add the marketplace entry next to `enabledPlugins`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "loopwright": {
+      "source": { "source": "github", "repo": "dmadaffa/loopwright" }
+    }
+  },
+  "enabledPlugins": {
+    "loopwright@loopwright": true
+  }
+}
+```
+
+In a repository's `.claude/settings.json`, `extraKnownMarketplaces` applies only after the contributor accepts the workspace trust dialog for the folder. In an untrusted folder it is ignored silently.
 
 ## The workflow
 
@@ -25,15 +49,33 @@ Needs Python 3.10+ and git. The scripts use only the standard library.
 2. `/loopwright:task-work [id]` picks a task: the given id, or the lowest-id open one that is ready.
 3. The `developer` subagent writes the failing test first, then the smallest fix. It reports every test with a label (below) and the failing output from before the fix. It never commits.
 4. The `code-reviewer` subagent gets the task and the diff, never the developer's report. It runs `scripts/run_on_base.py` to see the new tests run on the base revision, runs the full suite and the project's checks, and returns a verdict.
-5. Review rounds repeat until no blocking or should-fix finding remains. You then commit (never with `--no-verify`) and close the task.
+5. Review rounds repeat until no blocking or should-fix finding remains. The orchestrator then commits (never with `--no-verify`) and closes the task.
 
 ## Why it works this way
 
 **The blind reviewer.** The reviewer never sees the developer's report or reasoning. A report is a set of claims by the author; a reviewer who reads it starts by agreeing with it. Given only the task and the diff, the reviewer has to check each claim itself or not make it.
 
-**The base-revision check.** In TDD the red step is the proof that a test tests something: it must fail before the fix. A report saying "it failed" is not proof. `run_on_base.py` creates a temporary git worktree at the base revision, copies in the changed files except the fix files, runs the new tests there, prints what happened and removes the worktree. It supplies the evidence and judges nothing: the reviewer reads the per-test lines and verifies red against the developer's labels, and green with the full suite. A uv project builds a fresh environment in the worktree on the first run, so the reviewer allows a long timeout.
+**The base-revision check.** In TDD the red step is the proof that a test tests something: it must fail before the fix. A report saying "it failed" is not proof. `run_on_base.py` creates a temporary git worktree at the base revision, copies in the changed files except the fix files, runs the new tests there, prints what happened and removes the worktree. It supplies the evidence and judges nothing: the reviewer reads the per-test lines and verifies red against the developer's labels, and green with the full suite.
 
 **The reproduces / guard / decision labels.** Every added test has one stated purpose. A *reproduces* test fails before the fix and passes after, and every task needs one. A *guard* passes before and after and names the realistic over-fix it would catch. A *decision* pins a choice the task left open. A test that is none of these is noise, and the labels give the reviewer something concrete to check against the base-revision run: a "reproduces" test that passes on the old code is a finding.
+
+## What it produces
+
+`run_on_base.py` output, trimmed, for a task that adds `test_spaces_become_dashes` and fixes `slug.py`. The *reproduces* test fails on the base revision, as it should:
+
+```text
+base: HEAD (78b063a5258b3400cd9a52f7eff04113b9fc2bd9)
+copied: test_slug.py
+kept at base: slug.py
+command: uv run --with pytest pytest -v test_slug.py
+--- runner output ---
+test_slug.py::test_lowercases PASSED                                     [ 50%]
+test_slug.py::test_spaces_become_dashes FAILED                           [100%]
+E       AssertionError: assert 'hello world' == 'hello-world'
+========================= 1 failed, 1 passed in 0.06s =========================
+---
+runner exit code: 1
+```
 
 ## Lessons from real runs
 
@@ -62,23 +104,22 @@ This is not an exhaustive list. It compares loopwright with a few of the best-kn
 - **TDD Guard** blocks the agent's edits in real time, through hooks, when it writes implementation without a failing test. It supports many test frameworks. Its README says it has grown into Probity, and that new projects should start there. loopwright checks after the work, not during it, and has no live enforcement.
 - **taskmd** (driangle/taskmd) is a much more complete task manager. It has a CLI, a web dashboard, an MCP server and skills that run tasks. Its `verify` step runs a task's shell commands. loopwright's task files and index are deliberately plain. loopwright adds the blind reviewer and the base-revision check, which taskmd doesn't describe.
 
-## Version and known limits
+## Known limits
 
 Version 0.2.0. Built and dogfooded on one project, so expect rough edges on others.
 
 Authorship: Designed by Daniele Madaffari. The code was written by Claude Code agents under this workflow and reviewed by the author.
 
-Known limits:
-
 - Subagents can't invoke skills, so a project's user-facing commands must be run and checked by the orchestrating session.
 - `run_on_base.py` copies whole changed files; a file that mixes test and fix code can't be split.
 - Dogfooded on one project (a Python project run with uv), so other stacks are untested.
+- A uv project builds a fresh environment in the worktree on the first run, so the reviewer allows a long timeout.
 
 ## Developing loopwright
 
 To work on the plugin itself, run from the repo root:
 
-```
+```sh
 uv run pytest -q
 uv run ruff check .
 claude plugin validate --strict .
