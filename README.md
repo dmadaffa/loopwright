@@ -79,7 +79,7 @@ runner exit code: 1
 
 ## Lessons from real runs
 
-loopwright was dogfooded on one project, and its loop rules in `skills/task-work/SKILL.md` come from things that went wrong.
+loopwright was used on one project, [magic_wizard](https://github.com/dmadaffa/magic_wizard), and its loop rules in `skills/task-work/SKILL.md` come from things that went wrong.
 
 - **A reviewer's suggested fix caused a regression.** The fix tightened one case and broke a valid one; only the next review caught it. The orchestrator now checks each suggested fix for regressions before forwarding it.
 - **A YAML error hid a reviewer.** An unquoted `: ` in the agent's frontmatter description made Claude Code silently skip the agent. If an agent type is missing, check its frontmatter first.
@@ -106,13 +106,13 @@ This is not an exhaustive list. It compares loopwright with a few of the best-kn
 
 ## Known limits
 
-Version 0.2.0. Built and dogfooded on one project, so expect rough edges on others.
+Version 0.2.0. Built on one project and used there, so expect rough edges on others.
 
 Authorship: Designed by Daniele Madaffari. The code was written by Claude Code agents under this workflow and reviewed by the author.
 
 - Subagents can't invoke skills, so a project's user-facing commands must be run and checked by the orchestrating session.
 - `run_on_base.py` copies whole changed files; a file that mixes test and fix code can't be split.
-- Dogfooded on one project (a Python project run with uv), so other stacks are untested.
+- Used on one project (magic_wizard, a Python project run with uv), so other stacks are untested.
 - A uv project builds a fresh environment in the worktree on the first run, so the reviewer allows a long timeout.
 
 ## Developing loopwright
@@ -129,7 +129,7 @@ Work on this repo with the GitHub-installed copy of the plugin orchestrating, so
 
 To try a change, start a second session with `claude --plugin-dir <path to the clone>`. That copy silently replaces the installed one, and `claude plugin list` still shows the installed copy as enabled. To see which copy loaded, ask the session which Base directory the last loopwright skill loaded from: the repo path means the clone, the plugin cache path means the installed copy.
 
-To release, bump `version` in `.claude-plugin/plugin.json` and the Version line in this README, then push. The bump is needed because installs keep the cached copy until the version string changes. Third-party marketplaces don't auto-update by default, so then run `claude plugin update loopwright@loopwright` in each project that uses it, and restart the session (or run `/reload-plugins`) to load the new version.
+To release, bump `version` in `.claude-plugin/plugin.json` and the Version line in this README, then push. The bump is needed because installs keep the cached copy until the version string changes. Tag the commit `vX.Y.Z` (matching `plugin.json`), push the tag, and create a GitHub release from it with a short list of changes. Third-party marketplaces don't auto-update by default, so then run `claude plugin update loopwright@loopwright` in each project that uses it, and restart the session (or run `/reload-plugins`) to load the new version.
 
 CI runs the tests and `ruff check` on Ubuntu, Windows and macOS with Python 3.10 and the latest stable, and the validate step on Ubuntu.
 
