@@ -27,7 +27,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - uses: astral-sh/setup-uv@v6
       - name: Install dependencies
-        run: uv sync --python "${{ steps.py.outputs.python-path }}"
+        run: uv sync --locked --python "${{ steps.py.outputs.python-path }}"
       - name: Tests
         run: uv run pytest -q
       - name: Ruff
