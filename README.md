@@ -106,7 +106,7 @@ This is not an exhaustive list. It compares loopwright with a few of the best-kn
 
 ## Known limits
 
-Version 0.2.0. Built on one project and used there, so expect rough edges on others.
+Version 0.3.0. Built on one project and used there, so expect rough edges on others.
 
 Authorship: Designed by Daniele Madaffari. The code was written by Claude Code agents under this workflow and reviewed by the author.
 
