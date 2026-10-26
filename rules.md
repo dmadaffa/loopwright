@@ -25,5 +25,6 @@ To add a generic rule, append a section here. Keep each rule short and say why i
 
 - Match the surrounding style: naming, comment density, idioms.
 - Only change what the task needs. If you notice other problems, list them in your report; don't fix them.
+- Refactor and split scope: tidy and split only the change's own code, plus extracting existing code into a shared helper when the new code would otherwise duplicate it. A file that was already too big (more than one responsibility) before the change is proposed as a chore in the report, not split. Why: a wider cleanup hides the task's diff and risks behaviour changes.
 - Keep the project docs and docstrings in sync when behaviour or output shape changes.
 - Edit files with the Edit/Write tools, not `sed`, heredocs or inline scripts, whenever the text contains `\n`, quotes, `*` or other non-ASCII characters. Shell escaping has turned a `\n` inside a test string into a real line break and corrupted test files more than once. Shell edits are fine for simple ASCII substitutions; check the result with `git diff` either way.

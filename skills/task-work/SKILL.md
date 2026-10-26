@@ -39,7 +39,7 @@ Set `status: in-progress` in the task file and regenerate the index.
 
 ## 5. Develop and review
 
-Reproduce first: a bug or feature starts with a test that fails for the expected reason. Then the fix. Then your own review of the diff.
+Reproduce first: a bug or feature starts with a test that fails for the expected reason. Then the fix. Then a refactor of the change's own code while the tests are green. Then your own review of the diff.
 
 1. Spawn `loopwright:developer`. Give it the task file's path and its full content, plus any decisions taken in this run.
 2. When it reports `done`, spawn `loopwright:code-reviewer` with the same path, content and decisions. Never give the reviewer the developer's report or reasoning: it must judge the diff against the task alone. If the developer reports `blocked` or `partial`, stop and ask the user instead.
@@ -67,6 +67,7 @@ Run the checks the task's Done when assigns to the orchestrator (for example com
 Gate: no blocking or should-fix finding remains, each one was either fixed or rejected with a reason; the orchestrator checks of step 6 pass; and the test and check commands from the settings pass by the criterion the settings give (a check can be scoped to touched files, for example).
 
 - Record each optional finding you did not apply as a note in the task file, or as a new task with `/loopwright:task-new`.
+- When the developer's report proposes a split of a pre-existing file, ask the user whether to create a chore task for it with `/loopwright:task-new`. Until a chore type exists: `type: task`, a title starting "Chore:", and a body saying it moves code only and adds or removes no functionality.
 - Stage only the files this change touched, by name. Never `git add -A`.
 - Message: first line `<title> (#id)`, then a short body, then a blank line, then the configured trailer.
 - Never use `--no-verify`. If a pre-commit hook fails, fix the cause and commit again. One task, one commit.

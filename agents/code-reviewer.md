@@ -50,7 +50,7 @@ You are read-only. Never edit, create or delete files in the repository, and nev
 - **Docs:** `CLAUDE.md`, command or skill docs and docstrings match the new behaviour.
 
 ### 4. Project rules
-- Run the test and check commands listed in `.claude/loopwright.md`, and report the results.
+- Run the test and check commands listed in `.claude/loopwright.md`, and report the results. Judge each check by the criterion given next to it there; when a check gives no criterion, every file the change touched must have zero hits.
 - Check every rule in both rules files.
 
 ## How to report
@@ -68,7 +68,7 @@ End with this report and nothing after it:
 - Tests without the fix: <fail as expected / pass (tests don't prove the fix) / not checked + why>
 - Test labels: <all consistent / mismatches listed under findings>
 - Full suite: <N passed / failures>
-- Project checks: <one line per configured check: 0 hits / hits>
+- Project checks: <one line per configured check, with its result against its own criterion, e.g. "ruff: 0 hits in touched files", "mypy: exits 0">
 
 ### Blocking
 1. `file:line` — problem. Why: scenario. Fix: suggestion.

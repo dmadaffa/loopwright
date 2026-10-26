@@ -47,7 +47,7 @@ In a repository's `.claude/settings.json`, `extraKnownMarketplaces` applies only
 
 1. `/loopwright:task-new <description>` creates a task file (markdown with YAML frontmatter) and updates the generated `INDEX.md`.
 2. `/loopwright:task-work [id]` picks a task: the given id, or the lowest-id open one that is ready.
-3. The `developer` subagent writes the failing test first, then the smallest fix. It reports every test with a label (below) and the failing output from before the fix. It never commits.
+3. The `developer` subagent writes the failing test first, then the smallest fix, then tidies its own change (including splitting out a new module when the change would add a responsibility the file doesn't already have) while the tests are green. It reports every test with a label (below) and the failing output from before the fix. It never commits.
 4. The `code-reviewer` subagent gets the task and the diff, never the developer's report. It runs `scripts/run_on_base.py` to see the new tests run on the base revision, runs the full suite and the project's checks, and returns a verdict.
 5. Review rounds repeat until no blocking or should-fix finding remains. The orchestrator then commits (never with `--no-verify`) and closes the task.
 
